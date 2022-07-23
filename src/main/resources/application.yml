@@ -1,0 +1,40 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${env.DATABASE_URL}
+    username: ${env.DATABASE_USER}
+    password: ${env.DATABASE_PASSWORD}
+  web:
+    resources:
+      add-mappings: false
+  mvc:
+    throw-exception-if-no-handler-found: true
+
+
+server:
+  port: ${env.PORT}
+  error:
+    whitelabel:
+      enabled: false
+
+
+springdoc:
+  api-docs:
+    path: /api/config-server/docs
+  swagger-ui:
+    path: /api/config-server/index.html
+    tagsSorter: alpha
+    operationsSorter: method
+  packages-to-exclude: "com.ahirajustice.configserver.entities,"
+
+
+app:
+  config:
+    access-token-expire-minutes: ${env.ACCESS_TOKEN_EXPIRE_MINUTES}
+    public-key: ${env.PUBLIC_KEY}
+    private-key: ${env.PRIVATE_KEY}
+    superuser:
+      email: ${env.SUPERUSER_EMAIL}
+      first-name: ${env.SUPERUSER_FIRST_NAME}
+      last-name: ${env.SUPERUSER_LAST_NAME}
+      password: ${env.SUPERUSER_PASSWORD}
