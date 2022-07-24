@@ -8,7 +8,7 @@ import java.util.Random;
 public class CommonUtils {
 
     public static boolean containsSpecialCharactersAndNumbers(String str) {
-        String specialCharactersAndNumbers = "!@#$%&*()'+,-./:;<=>?[]^_`{|}0123456789";
+        String specialCharactersAndNumbers = "!@#$%&*()'+,-./:;<=>?[]^`{|}0123456789";
 
         for (int i = 0; i < str.length(); i++) {
             char ch = str.charAt(i);
