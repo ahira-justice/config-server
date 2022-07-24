@@ -132,7 +132,8 @@ public class RoleServiceImpl implements RoleService {
         if (CommonUtils.containsSpecialCharactersAndNumbers(name))
             errors.add(Error.create("name", "name must not contain special characters or numbers", name));
 
-        throw new ValidationException(errors);
+        if (!errors.isEmpty())
+            throw new ValidationException(errors);
     }
 
 }
