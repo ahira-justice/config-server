@@ -17,8 +17,8 @@ import org.springframework.beans.BeanUtils;
 @AllArgsConstructor
 public class ConfigViewModel extends BaseViewModel {
 
-    private String key;
-    private String value;
+    private String configKey;
+    private String configValue;
     private ConfigEnvironment configEnvironment;
 
     public static ConfigViewModel from(Config config) {

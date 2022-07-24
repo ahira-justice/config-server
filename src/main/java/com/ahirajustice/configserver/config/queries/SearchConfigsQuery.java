@@ -34,11 +34,11 @@ public class SearchConfigsQuery extends BaseQuery {
     @Override
     protected Predicate getPredicate(BooleanExpression expression) {
         if (StringUtils.isNotBlank(key)) {
-            expression = expression.and(QConfig.config.key.contains(key));
+            expression = expression.and(QConfig.config.configKey.contains(key));
         }
 
         if (StringUtils.isNotBlank(value)) {
-            expression = expression.and(QConfig.config.value.contains(value));
+            expression = expression.and(QConfig.config.configValue.contains(value));
         }
 
         if (configEnvironment != null) {

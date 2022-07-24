@@ -12,6 +12,7 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -23,15 +24,16 @@ import javax.persistence.UniqueConstraint;
 @AllArgsConstructor
 @Entity(name = "configs")
 @Table(
-        uniqueConstraints = {@UniqueConstraint(columnNames = {"client_id", "key", "configEnvironment"})}
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"client_id", "configKey", "configEnvironment"})}
 )
 public class Config extends BaseEntity {
 
     @Column(nullable = false)
-    private String key;
+    private String configKey;
 
+    @Lob
     @Column(nullable = false)
-    private String value;
+    private String configValue;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

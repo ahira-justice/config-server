@@ -4,18 +4,24 @@ import com.ahirajustice.configserver.client.services.CurrentClientService;
 import com.ahirajustice.configserver.common.entities.Client;
 import com.ahirajustice.configserver.common.entities.Config;
 import com.ahirajustice.configserver.common.enums.ConfigEnvironment;
+import com.ahirajustice.configserver.common.error.Error;
 import com.ahirajustice.configserver.common.exceptions.BadRequestException;
+import com.ahirajustice.configserver.common.exceptions.ValidationException;
 import com.ahirajustice.configserver.common.repositories.ConfigRepository;
+import com.ahirajustice.configserver.common.utils.CommonUtils;
 import com.ahirajustice.configserver.config.queries.SearchConfigsQuery;
 import com.ahirajustice.configserver.config.requests.BatchCreateConfigsRequest;
 import com.ahirajustice.configserver.config.requests.CreateConfigRequest;
 import com.ahirajustice.configserver.config.services.ConfigService;
+import com.ahirajustice.configserver.config.responses.ConfigEntry;
 import com.ahirajustice.configserver.config.viewmodels.ConfigViewModel;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,19 +38,20 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
-    public List<ConfigViewModel> fetchConfigs(ConfigEnvironment environment) {
+    public List<ConfigEntry> fetchConfigs(ConfigEnvironment configEnvironment) {
         Client currentClient = currentClientService.getCurrentClient();
 
-        List<Config> configs = configRepository.findByClientAndConfigEnvironment(currentClient, environment);
+        List<Config> configs = configRepository.findByClientAndConfigEnvironment(currentClient, configEnvironment);
 
-        return configs.stream().map(ConfigViewModel::from).collect(Collectors.toList());
+        return configs.stream().map(ConfigEntry::from).collect(Collectors.toList());
     }
 
     @Override
     public void createConfig(CreateConfigRequest request) {
+        validate(request.getKey());
         Client currentClient = currentClientService.getCurrentClient();
 
-        if (configRepository.existsByKeyAndClientAndConfigEnvironment(request.getKey(), currentClient, request.getConfigEnvironment())){
+        if (configRepository.existsByConfigKeyAndClientAndConfigEnvironment(request.getKey(), currentClient, request.getConfigEnvironment())){
             String msg = String.format(
                     "Config with key %s in %s environment already exists for client", request.getKey(), request.getConfigEnvironment()
             );
@@ -57,10 +64,23 @@ public class ConfigServiceImpl implements ConfigService {
         configRepository.save(config);
     }
 
+    private void validate(String key) {
+        List<Error> errors = new ArrayList<>();
+
+        if (StringUtils.containsWhitespace(key))
+            errors.add(Error.create("key", "key must not contain spaces", key));
+
+        if (CommonUtils.containsSpecialCharactersAndNumbers(key))
+            errors.add(Error.create("key", "key must not contain special characters or numbers", key));
+
+        if (!errors.isEmpty())
+            throw new ValidationException(errors);
+    }
+
     private Config buildConfig(CreateConfigRequest request) {
         return Config.builder()
-                .key(request.getKey())
-                .value(request.getValue())
+                .configKey(request.getKey())
+                .configValue(request.getValue())
                 .configEnvironment(request.getConfigEnvironment())
                 .build();
     }

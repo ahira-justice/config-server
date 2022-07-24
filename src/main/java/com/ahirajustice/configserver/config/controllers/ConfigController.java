@@ -8,6 +8,7 @@ import com.ahirajustice.configserver.config.queries.SearchConfigsQuery;
 import com.ahirajustice.configserver.config.requests.BatchCreateConfigsRequest;
 import com.ahirajustice.configserver.config.requests.CreateConfigRequest;
 import com.ahirajustice.configserver.config.services.ConfigService;
+import com.ahirajustice.configserver.config.responses.ConfigEntry;
 import com.ahirajustice.configserver.config.viewmodels.ConfigViewModel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -55,7 +56,7 @@ public class ConfigController {
     @PreAuthorize(AUTH_PREFIX + AuthorityConstants.CAN_PERFORM_CLIENT_OPERATIONS + AUTH_SUFFIX)
     @RequestMapping(path = "/{environment}", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
-    public List<ConfigViewModel> fetchConfigs(@PathVariable ConfigEnvironment environment) {
+    public List<ConfigEntry> fetchConfigs(@PathVariable ConfigEnvironment environment) {
         return configService.fetchConfigs(environment);
     }
 

@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface ConfigRepository extends JpaRepository<Config, Long>, QuerydslPredicateExecutor<Config> {
 
-    boolean existsByKeyAndClientAndConfigEnvironment(String key, Client client, ConfigEnvironment configEnvironment);
+    boolean existsByConfigKeyAndClientAndConfigEnvironment(String key, Client client, ConfigEnvironment configEnvironment);
 
     List<Config> findByClientAndConfigEnvironment(Client client, ConfigEnvironment configEnvironment);
 
