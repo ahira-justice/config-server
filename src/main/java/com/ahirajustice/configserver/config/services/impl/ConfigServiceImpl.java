@@ -3,18 +3,22 @@ package com.ahirajustice.configserver.config.services.impl;
 import com.ahirajustice.configserver.client.services.CurrentClientService;
 import com.ahirajustice.configserver.common.entities.Client;
 import com.ahirajustice.configserver.common.entities.Config;
+import com.ahirajustice.configserver.common.entities.ConfigFetchLog;
 import com.ahirajustice.configserver.common.enums.ConfigEnvironment;
 import com.ahirajustice.configserver.common.error.Error;
 import com.ahirajustice.configserver.common.exceptions.BadRequestException;
 import com.ahirajustice.configserver.common.exceptions.ValidationException;
+import com.ahirajustice.configserver.common.repositories.ConfigFetchLogRepository;
 import com.ahirajustice.configserver.common.repositories.ConfigRepository;
 import com.ahirajustice.configserver.common.utils.CommonUtils;
+import com.ahirajustice.configserver.common.utils.ObjectMapperUtil;
 import com.ahirajustice.configserver.config.queries.SearchConfigsQuery;
 import com.ahirajustice.configserver.config.requests.BatchCreateConfigsRequest;
 import com.ahirajustice.configserver.config.requests.CreateConfigRequest;
 import com.ahirajustice.configserver.config.services.ConfigService;
 import com.ahirajustice.configserver.config.responses.ConfigEntry;
 import com.ahirajustice.configserver.config.viewmodels.ConfigViewModel;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
@@ -30,7 +34,9 @@ import java.util.stream.Collectors;
 public class ConfigServiceImpl implements ConfigService {
 
     private final ConfigRepository configRepository;
+    private final ConfigFetchLogRepository configFetchLogRepository;
     private final CurrentClientService currentClientService;
+    private final ObjectMapper objectMapper;
 
     @Override
     public Page<ConfigViewModel> searchConfigs(SearchConfigsQuery query) {
@@ -43,7 +49,21 @@ public class ConfigServiceImpl implements ConfigService {
 
         List<Config> configs = configRepository.findByClientAndConfigEnvironment(currentClient, configEnvironment);
 
-        return configs.stream().map(ConfigEntry::from).collect(Collectors.toList());
+        List<ConfigEntry> response = configs.stream().map(ConfigEntry::from).collect(Collectors.toList());
+
+        logConfigFetch(configEnvironment, currentClient, response);
+
+        return response;
+    }
+
+    private void logConfigFetch(ConfigEnvironment configEnvironment, Client client, List<ConfigEntry> response) {
+        ConfigFetchLog configFetchLog = ConfigFetchLog.builder()
+                .client(client)
+                .configEnvironment(configEnvironment)
+                .retrievedConfig(ObjectMapperUtil.serialize(objectMapper, response))
+                .build();
+
+        configFetchLogRepository.save(configFetchLog);
     }
 
     @Override
