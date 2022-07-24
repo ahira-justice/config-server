@@ -5,6 +5,7 @@ import com.ahirajustice.configserver.auth.services.AuthService;
 import com.ahirajustice.configserver.common.constants.SecurityConstants;
 import com.ahirajustice.configserver.common.error.ErrorResponse;
 import com.ahirajustice.configserver.common.exceptions.UnauthorizedException;
+import com.ahirajustice.configserver.common.repositories.ClientRepository;
 import com.ahirajustice.configserver.common.repositories.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class AuthorizationFilter extends GenericFilterBean {
 
     private final AuthService authService;
     private final UserRepository userRepository;
+    private final ClientRepository clientRepository;
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain)
@@ -77,7 +79,7 @@ public class AuthorizationFilter extends GenericFilterBean {
 
             AuthToken authToken = authService.decodeJwt(token);
 
-            if (!userExists(authToken) || isExpired(authToken)) {
+            if ((!userExists(authToken) && !clientExists(authToken)) || isExpired(authToken)) {
                 writeErrorToResponse("Invalid or expired token", response);
                 return;
             }
@@ -147,7 +149,11 @@ public class AuthorizationFilter extends GenericFilterBean {
     }
 
     private boolean userExists(AuthToken token) {
-        return userRepository.findByUsername(token.getUsername()).isPresent();
+        return userRepository.existsByUsername(token.getUsername());
+    }
+
+    private boolean clientExists(AuthToken token) {
+        return clientRepository.existsByIdentifier(token.getClientId());
     }
 
     private boolean isExpired(AuthToken token) {
