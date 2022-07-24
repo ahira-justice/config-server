@@ -73,7 +73,7 @@ public class ConfigServiceImpl implements ConfigService {
 
         if (configRepository.existsByConfigKeyAndClientAndConfigEnvironment(request.getKey(), currentClient, request.getConfigEnvironment())){
             String msg = String.format(
-                    "Config with key %s in %s environment already exists for client", request.getKey(), request.getConfigEnvironment()
+                    "Config with key %s in %s environment already exists for client '%s'", request.getKey(), request.getConfigEnvironment(), currentClient.getIdentifier()
             );
             throw new BadRequestException(msg);
         }
