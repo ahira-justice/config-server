@@ -14,6 +14,9 @@ public class AuthorityConstants {
     // Config authorities
     public static final String CAN_SEARCH_CONFIGS = "CAN_SEARCH_CONFIGS";
 
+    // ConfigFetchLog authorities
+    public static final String CAN_SEARCH_CONFIG_FETCH_LOG = "CAN_SEARCH_CONFIG_FETCH_LOG";
+
     // Client authorities
     public static final String CAN_VIEW_CLIENT = "CAN_VIEW_CLIENT";
     public static final String CAN_SEARCH_CLIENTS = "CAN_SEARCH_CLIENTS";

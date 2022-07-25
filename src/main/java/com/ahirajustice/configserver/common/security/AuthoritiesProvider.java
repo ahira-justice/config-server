@@ -19,6 +19,9 @@ public class AuthoritiesProvider {
     // Config authorities
     public static Authority CAN_SEARCH_CONFIGS = new Authority(AuthorityConstants.CAN_SEARCH_CONFIGS);
 
+    // ConfigFetchLog authorities
+    public static Authority CAN_SEARCH_CONFIG_FETCH_LOG = new Authority(AuthorityConstants.CAN_SEARCH_CONFIG_FETCH_LOG);
+
     // Client authorities
     public static Authority CAN_VIEW_CLIENT = new Authority(AuthorityConstants.CAN_VIEW_CLIENT, true);
     public static Authority CAN_SEARCH_CLIENTS = new Authority(AuthorityConstants.CAN_SEARCH_CLIENTS, true);
@@ -46,6 +49,9 @@ public class AuthoritiesProvider {
 
         // Config authorities
         authorities.add(CAN_SEARCH_CONFIGS);
+
+        // ConfigFetchLog authorities
+        authorities.add(CAN_SEARCH_CONFIG_FETCH_LOG);
 
         // Client authorities
         authorities.add(CAN_VIEW_CLIENT);
