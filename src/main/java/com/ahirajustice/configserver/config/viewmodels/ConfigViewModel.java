@@ -20,11 +20,13 @@ public class ConfigViewModel extends BaseViewModel {
     private String configKey;
     private String configValue;
     private ConfigEnvironment configEnvironment;
+    private String client;
 
     public static ConfigViewModel from(Config config) {
         ConfigViewModel response = new ConfigViewModel();
 
         BeanUtils.copyProperties(config, response);
+        response.setClient(config.getClient().getIdentifier());
 
         return response;
     }
