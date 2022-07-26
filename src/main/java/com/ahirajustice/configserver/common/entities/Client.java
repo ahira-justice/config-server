@@ -30,6 +30,9 @@ public class Client extends BaseEntity {
     private String adminEmail;
 
     @Column(nullable = false)
+    private String refreshCallbackUrl;
+
+    @Column(nullable = false)
     private boolean isActive;
 
 }

@@ -57,6 +57,7 @@ public class ClientServiceImpl implements ClientService {
                 .secret(passwordEncoder.encode(request.getSecret()))
                 .name(request.getIdentifier())
                 .adminEmail(request.getAdminEmail())
+                .refreshCallbackUrl(request.getRestartCallbackUrl())
                 .build();
     }
 
@@ -71,6 +72,7 @@ public class ClientServiceImpl implements ClientService {
         Client client = clientExists.get();
 
         client.setAdminEmail(request.getAdminEmail());
+        client.setRefreshCallbackUrl(request.getRestartCallbackUrl());
 
         return ClientViewModel.from(clientRepository.save(client));
     }

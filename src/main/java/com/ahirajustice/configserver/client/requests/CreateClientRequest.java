@@ -21,5 +21,7 @@ public class CreateClientRequest {
     private String secret;
     @NotBlank(message = "adminEmail is required")
     private String adminEmail;
+    @NotBlank(message = "restartCallbackUrl is required")
+    private String restartCallbackUrl;
 
 }

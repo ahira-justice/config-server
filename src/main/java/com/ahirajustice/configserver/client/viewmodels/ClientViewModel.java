@@ -18,6 +18,7 @@ public class ClientViewModel {
     private String identifier;
     private String name;
     private String adminEmail;
+    private String restartCallbackUrl;
     private boolean isActive;
 
     public static ClientViewModel from(Client client) {

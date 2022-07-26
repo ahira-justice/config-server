@@ -11,6 +11,7 @@ CREATE TABLE clients
     name VARCHAR(255) NOT NULL,
     secret VARCHAR(255) NOT NULL,
     admin_email VARCHAR(255) NOT NULL,
+    refresh_callback_url VARCHAR(255) NOT NULL,
     is_active BIT(1) NOT NULL,
     CONSTRAINT pk_clients PRIMARY KEY (id),
     CONSTRAINT uc_clients_identifier UNIQUE (identifier),
