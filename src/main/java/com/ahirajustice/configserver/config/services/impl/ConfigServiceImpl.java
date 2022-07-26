@@ -7,14 +7,17 @@ import com.ahirajustice.configserver.common.entities.ConfigFetchLog;
 import com.ahirajustice.configserver.common.enums.ConfigEnvironment;
 import com.ahirajustice.configserver.common.error.Error;
 import com.ahirajustice.configserver.common.exceptions.BadRequestException;
+import com.ahirajustice.configserver.common.exceptions.ConfigurationException;
 import com.ahirajustice.configserver.common.exceptions.ValidationException;
 import com.ahirajustice.configserver.common.repositories.ConfigFetchLogRepository;
 import com.ahirajustice.configserver.common.repositories.ConfigRepository;
+import com.ahirajustice.configserver.common.responses.SimpleMessageResponse;
 import com.ahirajustice.configserver.common.utils.CommonUtils;
 import com.ahirajustice.configserver.common.utils.ObjectMapperUtil;
 import com.ahirajustice.configserver.config.queries.SearchConfigsQuery;
 import com.ahirajustice.configserver.config.requests.BatchCreateConfigsRequest;
 import com.ahirajustice.configserver.config.requests.CreateConfigRequest;
+import com.ahirajustice.configserver.config.requests.RefreshConfigsRequest;
 import com.ahirajustice.configserver.config.services.ConfigService;
 import com.ahirajustice.configserver.config.responses.ConfigEntry;
 import com.ahirajustice.configserver.config.viewmodels.ConfigViewModel;
@@ -22,8 +25,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +44,7 @@ public class ConfigServiceImpl implements ConfigService {
     private final ConfigFetchLogRepository configFetchLogRepository;
     private final CurrentClientService currentClientService;
     private final ObjectMapper objectMapper;
+    private final RestTemplate restTemplate;
 
     @Override
     public Page<ConfigViewModel> searchConfigs(SearchConfigsQuery query) {
@@ -46,7 +54,10 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     public List<ConfigEntry> fetchConfigs(ConfigEnvironment configEnvironment) {
         Client currentClient = currentClientService.getCurrentClient();
+        return fetchConfigs(configEnvironment, currentClient);
+    }
 
+    private List<ConfigEntry> fetchConfigs(ConfigEnvironment configEnvironment, Client currentClient) {
         List<Config> configs = configRepository.findByClientAndConfigEnvironment(currentClient, configEnvironment);
 
         List<ConfigEntry> response = configs.stream().map(ConfigEntry::from).collect(Collectors.toList());
@@ -110,6 +121,34 @@ public class ConfigServiceImpl implements ConfigService {
     public void batchCreateConfigs(BatchCreateConfigsRequest batchRequest) {
         for (var request: batchRequest.getRequests()) {
             createConfig(request);
+        }
+    }
+
+    @Override
+    public SimpleMessageResponse refreshConfigs(RefreshConfigsRequest request) {
+        Client currentClient = currentClientService.getCurrentClient();
+
+        List<ConfigEntry> configEntries = fetchConfigs(request.getEnvironment(), currentClient);
+
+        HttpEntity<?> requestEntity = new HttpEntity<>(configEntries);
+
+        try {
+            var responseEntity = restTemplate.exchange(
+                    currentClient.getRefreshCallbackUrl(),
+                    HttpMethod.POST,
+                    requestEntity,
+                    SimpleMessageResponse.class
+            );
+
+            return responseEntity.getBody();
+        }
+        catch (HttpClientErrorException ex) {
+            if (ex instanceof HttpClientErrorException.NotFound)
+                throw new BadRequestException("Client's restartCallbackUrl improperly configured");
+            else if (ex instanceof HttpClientErrorException.BadRequest || ex instanceof HttpClientErrorException.UnprocessableEntity)
+                throw new ConfigurationException(String.format("Bad restart implementation on client '%s'", currentClient.getIdentifier()));
+            else
+                throw new ConfigurationException(ex.getMessage());
         }
     }
 

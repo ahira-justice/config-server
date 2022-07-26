@@ -4,9 +4,11 @@ import com.ahirajustice.configserver.common.constants.AuthorityConstants;
 import com.ahirajustice.configserver.common.enums.ConfigEnvironment;
 import com.ahirajustice.configserver.common.error.ErrorResponse;
 import com.ahirajustice.configserver.common.error.ValidationErrorResponse;
+import com.ahirajustice.configserver.common.responses.SimpleMessageResponse;
 import com.ahirajustice.configserver.config.queries.SearchConfigsQuery;
 import com.ahirajustice.configserver.config.requests.BatchCreateConfigsRequest;
 import com.ahirajustice.configserver.config.requests.CreateConfigRequest;
+import com.ahirajustice.configserver.config.requests.RefreshConfigsRequest;
 import com.ahirajustice.configserver.config.services.ConfigService;
 import com.ahirajustice.configserver.config.responses.ConfigEntry;
 import com.ahirajustice.configserver.config.viewmodels.ConfigViewModel;
@@ -105,6 +107,22 @@ public class ConfigController {
     @ResponseStatus(HttpStatus.OK)
     public void batchCreateConfigs(@Valid @RequestBody BatchCreateConfigsRequest request) {
         configService.batchCreateConfigs(request);
+    }
+
+    @Operation(summary = "Refresh Configs", security = { @SecurityRequirement(name = "bearer") })
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "200"),
+                    @ApiResponse(responseCode = "401", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)) }),
+                    @ApiResponse(responseCode = "403", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)) }),
+                    @ApiResponse(responseCode = "422", content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ValidationErrorResponse.class)) })
+            }
+    )
+    @PreAuthorize(AUTH_PREFIX + AuthorityConstants.CAN_PERFORM_CLIENT_OPERATIONS + AUTH_SUFFIX)
+    @RequestMapping(path = "/refresh", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    public SimpleMessageResponse refreshConfigs(@Valid @RequestBody RefreshConfigsRequest request) {
+        return configService.refreshConfigs(request);
     }
 
 }

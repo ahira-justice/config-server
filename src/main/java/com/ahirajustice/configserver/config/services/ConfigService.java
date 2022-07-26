@@ -1,9 +1,11 @@
 package com.ahirajustice.configserver.config.services;
 
 import com.ahirajustice.configserver.common.enums.ConfigEnvironment;
+import com.ahirajustice.configserver.common.responses.SimpleMessageResponse;
 import com.ahirajustice.configserver.config.queries.SearchConfigsQuery;
 import com.ahirajustice.configserver.config.requests.BatchCreateConfigsRequest;
 import com.ahirajustice.configserver.config.requests.CreateConfigRequest;
+import com.ahirajustice.configserver.config.requests.RefreshConfigsRequest;
 import com.ahirajustice.configserver.config.responses.ConfigEntry;
 import com.ahirajustice.configserver.config.viewmodels.ConfigViewModel;
 import org.springframework.data.domain.Page;
@@ -19,5 +21,7 @@ public interface ConfigService {
     void createConfig(CreateConfigRequest request);
 
     void batchCreateConfigs(BatchCreateConfigsRequest batchRequest);
+
+    SimpleMessageResponse refreshConfigs(RefreshConfigsRequest request);
 
 }
