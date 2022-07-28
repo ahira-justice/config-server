@@ -8,6 +8,7 @@ import com.ahirajustice.configserver.common.enums.ConfigEnvironment;
 import com.ahirajustice.configserver.common.error.Error;
 import com.ahirajustice.configserver.common.exceptions.BadRequestException;
 import com.ahirajustice.configserver.common.exceptions.ConfigurationException;
+import com.ahirajustice.configserver.common.exceptions.FailedDependencyException;
 import com.ahirajustice.configserver.common.exceptions.ValidationException;
 import com.ahirajustice.configserver.common.repositories.ConfigFetchLogRepository;
 import com.ahirajustice.configserver.common.repositories.ConfigRepository;
@@ -30,6 +31,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -144,11 +146,14 @@ public class ConfigServiceImpl implements ConfigService {
         }
         catch (HttpClientErrorException ex) {
             if (ex instanceof HttpClientErrorException.NotFound)
-                throw new BadRequestException("Client's restartCallbackUrl improperly configured");
+                throw new BadRequestException("Client's refreshCallbackUrl improperly configured");
             else if (ex instanceof HttpClientErrorException.BadRequest || ex instanceof HttpClientErrorException.UnprocessableEntity)
-                throw new ConfigurationException(String.format("Bad restart implementation on client '%s'", currentClient.getIdentifier()));
+                throw new ConfigurationException(String.format("Bad refresh implementation on client '%s'", currentClient.getIdentifier()));
             else
                 throw new ConfigurationException(ex.getMessage());
+        }
+        catch (ResourceAccessException ex) {
+            throw new FailedDependencyException("Cannot reach client application. Please try again later");
         }
     }
 
