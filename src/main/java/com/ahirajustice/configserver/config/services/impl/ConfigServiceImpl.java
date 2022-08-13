@@ -13,8 +13,9 @@ import com.ahirajustice.configserver.common.exceptions.ValidationException;
 import com.ahirajustice.configserver.common.repositories.ConfigFetchLogRepository;
 import com.ahirajustice.configserver.common.repositories.ConfigRepository;
 import com.ahirajustice.configserver.common.responses.SimpleMessageResponse;
+import com.ahirajustice.configserver.common.utils.AuthUtils;
 import com.ahirajustice.configserver.common.utils.CommonUtils;
-import com.ahirajustice.configserver.common.utils.ObjectMapperUtil;
+import com.ahirajustice.configserver.common.utils.ObjectMapperUtils;
 import com.ahirajustice.configserver.config.queries.SearchConfigsQuery;
 import com.ahirajustice.configserver.config.requests.BatchCreateConfigsRequest;
 import com.ahirajustice.configserver.config.requests.CreateConfigRequest;
@@ -73,7 +74,7 @@ public class ConfigServiceImpl implements ConfigService {
         ConfigFetchLog configFetchLog = ConfigFetchLog.builder()
                 .client(client)
                 .configEnvironment(configEnvironment)
-                .retrievedConfig(ObjectMapperUtil.serialize(objectMapper, response))
+                .retrievedConfig(ObjectMapperUtils.serialize(objectMapper, response))
                 .build();
 
         configFetchLogRepository.save(configFetchLog);
@@ -91,8 +92,7 @@ public class ConfigServiceImpl implements ConfigService {
             throw new BadRequestException(msg);
         }
 
-        Config config = buildConfig(request);
-        config.setClient(currentClient);
+        Config config = buildConfig(request, currentClient);
 
         configRepository.save(config);
     }
@@ -110,11 +110,22 @@ public class ConfigServiceImpl implements ConfigService {
             throw new ValidationException(errors);
     }
 
-    private Config buildConfig(CreateConfigRequest request) {
+    private Config buildConfig(CreateConfigRequest request, Client client) {
+        String configValue = request.getValue();
+
+        if (request.encrypt()) {
+            if (StringUtils.isBlank(client.getPublicKey()))
+                throw new BadRequestException("Client public key is not set. Cannot encrypt config.");
+
+            configValue = AuthUtils.encryptString(configValue, client.getPublicKey());
+        }
+
         return Config.builder()
                 .configKey(request.getKey())
-                .configValue(request.getValue())
+                .configValue(configValue)
                 .configEnvironment(request.getConfigEnvironment())
+                .encrypted(request.encrypt())
+                .client(client)
                 .build();
     }
 

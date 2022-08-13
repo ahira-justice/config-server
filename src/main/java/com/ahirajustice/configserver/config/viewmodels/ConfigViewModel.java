@@ -20,6 +20,7 @@ public class ConfigViewModel extends BaseViewModel {
     private String configKey;
     private String configValue;
     private ConfigEnvironment configEnvironment;
+    private Boolean encrypted;
     private String client;
 
     public static ConfigViewModel from(Config config) {

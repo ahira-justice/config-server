@@ -58,6 +58,7 @@ public class ClientServiceImpl implements ClientService {
                 .name(request.getIdentifier())
                 .adminEmail(request.getAdminEmail())
                 .refreshCallbackUrl(request.getRestartCallbackUrl())
+                .publicKey(request.getPublicKey())
                 .build();
     }
 

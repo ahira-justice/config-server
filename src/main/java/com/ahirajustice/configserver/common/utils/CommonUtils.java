@@ -1,10 +1,13 @@
 package com.ahirajustice.configserver.common.utils;
 
 import com.ahirajustice.configserver.common.enums.TimeFactor;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import java.security.SecureRandom;
 import java.util.Random;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CommonUtils {
 
     public static boolean containsSpecialCharactersAndNumbers(String str) {

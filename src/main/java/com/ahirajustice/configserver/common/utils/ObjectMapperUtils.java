@@ -4,9 +4,12 @@ import com.ahirajustice.configserver.common.exceptions.SystemErrorException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
-public class ObjectMapperUtil {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class ObjectMapperUtils {
 
     public static String serialize(ObjectMapper objectMapper, Object object) {
         try {

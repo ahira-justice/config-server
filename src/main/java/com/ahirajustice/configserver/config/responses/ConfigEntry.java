@@ -16,12 +16,14 @@ public class ConfigEntry {
 
     private String configKey;
     private String configValue;
+    private Boolean encrypted;
 
     public static ConfigEntry from(Config config) {
         ConfigEntry response = new ConfigEntry();
 
         response.setConfigKey(config.getConfigKey());
         response.setConfigValue(config.getConfigValue());
+        response.setEncrypted(config.getEncrypted());
 
         return response;
     }

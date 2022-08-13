@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Lob;
 
 @Getter
 @Setter
@@ -31,6 +32,10 @@ public class Client extends BaseEntity {
 
     @Column(nullable = false)
     private String refreshCallbackUrl;
+
+    @Lob
+    @Column(nullable = false)
+    private String publicKey;
 
     @Column(nullable = false)
     private boolean isActive;

@@ -11,11 +11,11 @@ import com.ahirajustice.configserver.common.entities.Authority;
 import com.ahirajustice.configserver.common.entities.Client;
 import com.ahirajustice.configserver.common.entities.User;
 import com.ahirajustice.configserver.common.enums.TimeFactor;
-import com.ahirajustice.configserver.common.exceptions.ConfigurationException;
 import com.ahirajustice.configserver.common.exceptions.UnauthorizedException;
 import com.ahirajustice.configserver.common.properties.AppProperties;
 import com.ahirajustice.configserver.common.repositories.ClientRepository;
 import com.ahirajustice.configserver.common.repositories.UserRepository;
+import com.ahirajustice.configserver.common.utils.AuthUtils;
 import com.ahirajustice.configserver.common.utils.CommonUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -26,15 +26,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Optional;
@@ -72,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
     private LoginResponse generateAuthToken(User user, int expires) {
         int expiry = expires > 0 ? expires : appProperties.getAccessTokenExpireMinutes();
 
-        PrivateKey privateKey = getPrivateKey();
+        PrivateKey privateKey = AuthUtils.getPrivateKey(appProperties.getPrivateKey());
 
         String token = Jwts.builder()
                 .setSubject(user.getUsername())
@@ -112,7 +106,7 @@ public class AuthServiceImpl implements AuthService {
     private LoginResponse generateAuthToken(Client client, int expires) {
         int expiry = expires > 0 ? expires : appProperties.getAccessTokenExpireMinutes();
 
-        PrivateKey privateKey = getPrivateKey();
+        PrivateKey privateKey = AuthUtils.getPrivateKey(appProperties.getPrivateKey());
 
         String token = Jwts.builder()
                 .setExpiration(new Date(System.currentTimeMillis() + CommonUtils.convertToMillis(expiry, TimeFactor.MINUTE)))
@@ -132,7 +126,7 @@ public class AuthServiceImpl implements AuthService {
     public AuthToken decodeJwt(String token) {
         AuthToken authToken = new AuthToken();
 
-        PublicKey publicKey = getPublicKey();
+        PublicKey publicKey = AuthUtils.getPublicKey(appProperties.getPublicKey());
 
         try{
             Claims claims = Jwts.parserBuilder().setSigningKey(publicKey).build().parseClaimsJws(token).getBody();
@@ -153,39 +147,7 @@ public class AuthServiceImpl implements AuthService {
         return passwordEncoder.matches(password, encryptedPassword);
     }
 
-    private PublicKey getPublicKey() {
-        X509EncodedKeySpec keySpec;
-        KeyFactory kf;
-        PublicKey publicKey;
 
-        try {
-            byte [] publicKeyBytes = Base64.getDecoder().decode(appProperties.getPublicKey());
-            keySpec = new X509EncodedKeySpec(publicKeyBytes);
-            kf = KeyFactory.getInstance("RSA");
-            publicKey = kf.generatePublic(keySpec);
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException ex) {
-            throw new ConfigurationException(ex.getMessage());
-        }
-
-        return publicKey;
-    }
-
-    private PrivateKey getPrivateKey() {
-        PKCS8EncodedKeySpec keySpec;
-        KeyFactory kf;
-        PrivateKey privateKey;
-
-        try {
-            byte [] privateKeyBytes = Base64.getDecoder().decode(appProperties.getPrivateKey());
-            keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
-            kf = KeyFactory.getInstance("RSA");
-            privateKey = kf.generatePrivate(keySpec);
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException ex) {
-            throw new ConfigurationException(ex.getMessage());
-        }
-
-        return privateKey;
-    }
 
 
 }

@@ -39,6 +39,9 @@ public class Config extends BaseEntity {
     @Column(nullable = false)
     private ConfigEnvironment configEnvironment;
 
+    @Column(nullable = false)
+    private Boolean encrypted;
+
     @ManyToOne
     @JoinColumn(nullable = false)
     private Client client;
