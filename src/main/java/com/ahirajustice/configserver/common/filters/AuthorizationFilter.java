@@ -1,7 +1,7 @@
 package com.ahirajustice.configserver.common.filters;
 
-import com.ahirajustice.configserver.auth.dtos.AuthToken;
-import com.ahirajustice.configserver.auth.services.AuthService;
+import com.ahirajustice.configserver.modules.auth.dtos.AuthToken;
+import com.ahirajustice.configserver.modules.auth.services.AuthService;
 import com.ahirajustice.configserver.common.constants.SecurityConstants;
 import com.ahirajustice.configserver.common.error.ErrorResponse;
 import com.ahirajustice.configserver.common.exceptions.UnauthorizedException;

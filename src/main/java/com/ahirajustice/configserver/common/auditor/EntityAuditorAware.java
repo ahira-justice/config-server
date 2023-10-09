@@ -1,7 +1,7 @@
 package com.ahirajustice.configserver.common.auditor;
 
 import com.ahirajustice.configserver.common.entities.User;
-import com.ahirajustice.configserver.user.services.CurrentUserService;
+import com.ahirajustice.configserver.modules.user.services.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.stereotype.Component;
