@@ -3,7 +3,6 @@ package com.ahirajustice.configserver.modules.config.queries;
 import com.ahirajustice.configserver.common.entities.BaseEntity;
 import com.ahirajustice.configserver.common.entities.Config;
 import com.ahirajustice.configserver.common.entities.QConfig;
-import com.ahirajustice.configserver.common.enums.ConfigEnvironment;
 import com.ahirajustice.configserver.common.queries.BaseQuery;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -23,8 +22,7 @@ public class SearchConfigsQuery extends BaseQuery {
 
     private String key;
     private String value;
-    private ConfigEnvironment configEnvironment;
-    private long clientId;
+    private String microserviceIdentifier;
 
     @Override
     protected Class<? extends BaseEntity> getSortEntityClass() {
@@ -41,12 +39,8 @@ public class SearchConfigsQuery extends BaseQuery {
             expression = expression.and(QConfig.config.configValue.contains(value));
         }
 
-        if (configEnvironment != null) {
-            expression = expression.and(QConfig.config.configEnvironment.eq(configEnvironment));
-        }
-
-        if (clientId > 0) {
-            expression = expression.and(QConfig.config.client.id.eq(clientId));
+        if (StringUtils.isNotBlank(microserviceIdentifier)) {
+            expression = expression.and(QConfig.config.microservice.identifier.contains(microserviceIdentifier));
         }
 
         return expression;

@@ -74,7 +74,7 @@ public class AuthUtils {
             throw new ConfigurationException(ex.getMessage());
         }
         catch (ConfigurationException | InvalidKeyException ex) {
-            throw new ValidationException("Client public key is invalid. Update client public key");
+            throw new ValidationException("Microservice public key is invalid. Update microservice public key");
         }
 
         return encryptedMessage;

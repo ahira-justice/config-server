@@ -1,8 +1,8 @@
-package com.ahirajustice.configserver.modules.configfetchlog.queries;
+package com.ahirajustice.configserver.modules.microservice.queries;
 
 import com.ahirajustice.configserver.common.entities.BaseEntity;
-import com.ahirajustice.configserver.common.entities.ConfigFetchLog;
-import com.ahirajustice.configserver.common.entities.QConfigFetchLog;
+import com.ahirajustice.configserver.common.entities.Microservice;
+import com.ahirajustice.configserver.common.entities.QMicroservice;
 import com.ahirajustice.configserver.common.queries.BaseQuery;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -18,19 +18,24 @@ import org.apache.commons.lang3.StringUtils;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SearchConfigFetchLogQuery extends BaseQuery {
+public class SearchMicroservicesQuery extends BaseQuery {
 
-    private String microserviceIdentifier;
+    private String identifier;
+    private Boolean isActive;
 
     @Override
     protected Class<? extends BaseEntity> getSortEntityClass() {
-        return ConfigFetchLog.class;
+        return Microservice.class;
     }
 
     @Override
     protected Predicate getPredicate(BooleanExpression expression) {
-        if (StringUtils.isNotBlank(microserviceIdentifier)) {
-            expression = expression.and(QConfigFetchLog.configFetchLog.microservice.identifier.contains(microserviceIdentifier));
+        if (StringUtils.isNotBlank(identifier)) {
+            expression = expression.and(QMicroservice.microservice.identifier.contains(identifier));
+        }
+
+        if (isActive != null) {
+            expression = expression.and(QMicroservice.microservice.isActive.eq(isActive));
         }
 
         return expression;

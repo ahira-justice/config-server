@@ -1,19 +1,15 @@
 package com.ahirajustice.configserver.common.filters;
 
-import com.ahirajustice.configserver.modules.auth.dtos.AuthToken;
-import com.ahirajustice.configserver.modules.auth.services.AuthService;
 import com.ahirajustice.configserver.common.constants.SecurityConstants;
 import com.ahirajustice.configserver.common.error.ErrorResponse;
 import com.ahirajustice.configserver.common.exceptions.UnauthorizedException;
-import com.ahirajustice.configserver.common.repositories.ClientRepository;
+import com.ahirajustice.configserver.common.repositories.MicroserviceRepository;
 import com.ahirajustice.configserver.common.repositories.UserRepository;
+import com.ahirajustice.configserver.modules.auth.dtos.AuthToken;
+import com.ahirajustice.configserver.modules.auth.services.AuthDecodeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
@@ -26,16 +22,14 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.Instant;
-import java.util.Collection;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class AuthorizationFilter extends GenericFilterBean {
 
-    private final AuthService authService;
+    private final AuthDecodeService authDecodeService;
     private final UserRepository userRepository;
-    private final ClientRepository clientRepository;
+    private final MicroserviceRepository microserviceRepository;
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain)
@@ -77,58 +71,15 @@ public class AuthorizationFilter extends GenericFilterBean {
                 return;
             }
 
-            AuthToken authToken = authService.decodeJwt(token);
+            AuthToken authToken = authDecodeService.decodeJwt(token);
 
-            if ((!userExists(authToken) && !clientExists(authToken)) || isExpired(authToken)) {
+            if ((!userExists(authToken) && !microserviceExists(authToken)) || isExpired(authToken)) {
                 writeErrorToResponse("Invalid or expired token", response);
                 return;
             }
-
-            Authentication authentication = getAuthentication(authToken);
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
         chain.doFilter(request, response);
-    }
-
-    private Authentication getAuthentication(AuthToken authToken) {
-        return new Authentication() {
-            @Override
-            public Collection<? extends GrantedAuthority> getAuthorities() {
-                return authToken.getAuthorities().stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
-            }
-
-            @Override
-            public Object getCredentials() {
-                return null;
-            }
-
-            @Override
-            public Object getDetails() {
-                return null;
-            }
-
-            @Override
-            public Object getPrincipal() {
-                return null;
-            }
-
-            @Override
-            public boolean isAuthenticated() {
-                return true;
-            }
-
-            @Override
-            public void setAuthenticated(boolean b) throws IllegalArgumentException {
-
-            }
-
-            @Override
-            public String getName() {
-                return authToken.getUsername();
-            }
-        };
     }
 
     private boolean excludeFromAuth(String requestURI, String requestMethod) {
@@ -152,8 +103,8 @@ public class AuthorizationFilter extends GenericFilterBean {
         return userRepository.existsByUsername(token.getUsername());
     }
 
-    private boolean clientExists(AuthToken token) {
-        return clientRepository.existsByIdentifier(token.getClientId());
+    private boolean microserviceExists(AuthToken token) {
+        return microserviceRepository.existsByIdentifier(token.getMicroserviceId());
     }
 
     private boolean isExpired(AuthToken token) {

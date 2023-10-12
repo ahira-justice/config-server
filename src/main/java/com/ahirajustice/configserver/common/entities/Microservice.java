@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 
 @Getter
@@ -16,18 +17,19 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "users")
-public class User extends BaseEntity {
+@Table(name = "microservices")
+public class Microservice extends BaseEntity {
 
     @Column(nullable = false, unique = true)
-    private String username;
+    private String identifier;
     @Column(nullable = false, unique = true)
-    private String email;
+    private String secretKey;
+    @Lob
     @Column(nullable = false)
-    private String password;
+    private String encryptingKey;
     @Column(nullable = false)
-    private String firstName;
+    private String baseUrl;
     @Column(nullable = false)
-    private String lastName;
+    private boolean isActive;
 
 }

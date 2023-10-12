@@ -1,1 +1,0 @@
-ALTER TABLE clients ADD public_key LONGTEXT NOT NULL;

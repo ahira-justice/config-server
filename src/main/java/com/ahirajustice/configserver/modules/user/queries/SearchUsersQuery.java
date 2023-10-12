@@ -25,7 +25,6 @@ public class SearchUsersQuery extends BaseQuery {
     private Boolean isEmailVerified;
     private String firstName;
     private String lastName;
-    private long roleId;
 
     @Override
     protected Class<? extends BaseEntity> getSortEntityClass() {
@@ -42,20 +41,12 @@ public class SearchUsersQuery extends BaseQuery {
             expression = expression.and(QUser.user.email.contains(email));
         }
 
-        if (isEmailVerified != null) {
-            expression = expression.and(QUser.user.isEmailVerified.eq(isEmailVerified));
-        }
-
         if (StringUtils.isNotBlank(firstName)) {
             expression = expression.and(QUser.user.firstName.contains(firstName));
         }
 
         if (StringUtils.isNotBlank(lastName)) {
             expression = expression.and(QUser.user.lastName.contains(lastName));
-        }
-
-        if (roleId > 0) {
-            expression = expression.and(QUser.user.role.id.eq(roleId));
         }
 
         return expression;

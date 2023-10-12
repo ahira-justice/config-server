@@ -26,26 +26,20 @@ public abstract class BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-
     @CreatedDate
     @Column(nullable = false)
     private LocalDateTime createdOn;
-
     @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime lastModifiedOn;
-
     @CreatedBy
     @Column(nullable = false)
     private String createdBy;
-
     @LastModifiedBy
     @Column(nullable = false)
     private String lastModifiedBy;
-
     @Column(nullable = false)
     private boolean isDeleted;
-
     @Version
     @Column(nullable = false)
     private int version;

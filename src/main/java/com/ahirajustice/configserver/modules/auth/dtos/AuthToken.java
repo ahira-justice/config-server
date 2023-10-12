@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Date;
-import java.util.List;
 
 @Getter
 @Setter
@@ -17,9 +16,7 @@ import java.util.List;
 public class AuthToken {
 
     private String username;
-    private String clientId;
+    private String microserviceId;
     private Date expiry;
-    private List<String> roles;
-    private List<String> authorities;
 
 }

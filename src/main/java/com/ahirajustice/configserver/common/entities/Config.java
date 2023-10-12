@@ -1,6 +1,5 @@
 package com.ahirajustice.configserver.common.entities;
 
-import com.ahirajustice.configserver.common.enums.ConfigEnvironment;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -9,8 +8,6 @@ import lombok.Setter;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
@@ -22,28 +19,22 @@ import javax.persistence.UniqueConstraint;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity(name = "configs")
+@Entity
 @Table(
-        uniqueConstraints = {@UniqueConstraint(columnNames = {"client_id", "configKey", "configEnvironment"})}
+        name = "configs",
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"microservice_id", "configKey"})}
 )
 public class Config extends BaseEntity {
 
     @Column(nullable = false)
     private String configKey;
-
     @Lob
     @Column(nullable = false)
     private String configValue;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ConfigEnvironment configEnvironment;
-
     @Column(nullable = false)
     private Boolean encrypted;
-
     @ManyToOne
     @JoinColumn(nullable = false)
-    private Client client;
+    private Microservice microservice;
 
 }

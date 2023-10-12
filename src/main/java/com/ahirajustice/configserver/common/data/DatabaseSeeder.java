@@ -1,102 +1,42 @@
 package com.ahirajustice.configserver.common.data;
 
-import com.ahirajustice.configserver.common.entities.Authority;
-import com.ahirajustice.configserver.common.entities.Role;
+import com.ahirajustice.configserver.common.constants.SuperuserConstants;
 import com.ahirajustice.configserver.common.entities.User;
-import com.ahirajustice.configserver.common.enums.Roles;
 import com.ahirajustice.configserver.common.properties.AppProperties;
-import com.ahirajustice.configserver.common.repositories.AuthorityRepository;
-import com.ahirajustice.configserver.common.repositories.RoleRepository;
 import com.ahirajustice.configserver.common.repositories.UserRepository;
-import com.ahirajustice.configserver.common.security.AuthoritiesProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
 public class DatabaseSeeder implements ApplicationRunner {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final AuthorityRepository authorityRepository;
 
     private final BCryptPasswordEncoder passwordEncoder;
     private final AppProperties appProperties;
 
-    private void installAuthorities() {
-        Set<Authority> authorities = AuthoritiesProvider.getAllAuthorities();
-
-        for (Authority authority : authorities) {
-            try {
-                Optional<Authority> authorityExists = authorityRepository.findByName(authority.getName());
-
-                if (authorityExists.isPresent()) {
-                    continue;
-                }
-
-                authorityRepository.save(authority);
-            } catch (Exception ignored) {
-
-            }
-        }
-    }
-
-    private void installDefaultRoles() {
-        Set<Role> roles = AuthoritiesProvider.getDefaultRoles();
-
-        Iterable<Authority> authorities = authorityRepository.findAll();
-
-        for (Role role : roles) {
-            Optional<Role> roleExists = roleRepository.findByName(role.getName());
-
-            Set<Authority> roleAuthorities = new HashSet<>();
-
-            for (Authority roleAuthority : role.getAuthorities()) {
-                for (Authority authority : authorities) {
-                    if (authority.getName().equals(roleAuthority.getName())) {
-                        roleAuthorities.add(authority);
-                    }
-                }
-            }
-
-            if (roleExists.isPresent()) {
-                Role currentRole = roleExists.get();
-                currentRole.setAuthorities(roleAuthorities);
-                roleRepository.save(currentRole);
-
-            } else {
-                role.setAuthorities(roleAuthorities);
-                roleRepository.save(role);
-            }
-        }
-    }
-
-    private void seedSuperAdminUser() {
+    private void seedSuperuserUser() {
         try {
-            Optional<User> superAdminExists = userRepository.findByUsername(appProperties.getSuperuserEmail());
+            Optional<User> superuserExists = userRepository.findByUsername(SuperuserConstants.SUPERUSER_EMAIL);
 
-            if (superAdminExists.isPresent()) {
+            if (superuserExists.isPresent()) {
                 return;
             }
 
-            User superAdmin = new User();
-            Role superAdminRole = roleRepository.findByName(Roles.SUPERADMIN.name()).orElse(null);
-            superAdmin.setEmail(appProperties.getSuperuserEmail());
-            superAdmin.setUsername(superAdmin.getEmail());
-            superAdmin.setFirstName(appProperties.getSuperuserFirstName());
-            superAdmin.setLastName(appProperties.getSuperuserLastName());
-            superAdmin.setEmailVerified(true);
-            superAdmin.setPassword(passwordEncoder.encode(appProperties.getSuperuserPassword()));
-            superAdmin.setRole(superAdminRole);
+            User superuser = new User();
+            superuser.setEmail(SuperuserConstants.SUPERUSER_EMAIL);
+            superuser.setUsername(SuperuserConstants.SUPERUSER_USERNAME);
+            superuser.setPassword(passwordEncoder.encode(appProperties.getSuperuserPassword()));
+            superuser.setFirstName(SuperuserConstants.SUPERUSER_FIRST_NAME);
+            superuser.setLastName(SuperuserConstants.SUPERUSER_LAST_NAME);
 
-            userRepository.save(superAdmin);
+            userRepository.save(superuser);
         } catch (Exception ignored) {
 
         }
@@ -104,9 +44,7 @@ public class DatabaseSeeder implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        installAuthorities();
-        installDefaultRoles();
-        seedSuperAdminUser();
+        seedSuperuserUser();
     }
 
 }

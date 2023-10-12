@@ -1,10 +1,8 @@
 package com.ahirajustice.configserver.modules.config.services.impl;
 
-import com.ahirajustice.configserver.modules.client.services.CurrentClientService;
-import com.ahirajustice.configserver.common.entities.Client;
 import com.ahirajustice.configserver.common.entities.Config;
 import com.ahirajustice.configserver.common.entities.ConfigFetchLog;
-import com.ahirajustice.configserver.common.enums.ConfigEnvironment;
+import com.ahirajustice.configserver.common.entities.Microservice;
 import com.ahirajustice.configserver.common.error.Error;
 import com.ahirajustice.configserver.common.exceptions.BadRequestException;
 import com.ahirajustice.configserver.common.exceptions.ConfigurationException;
@@ -19,10 +17,10 @@ import com.ahirajustice.configserver.common.utils.ObjectMapperUtils;
 import com.ahirajustice.configserver.modules.config.queries.SearchConfigsQuery;
 import com.ahirajustice.configserver.modules.config.requests.BatchCreateConfigsRequest;
 import com.ahirajustice.configserver.modules.config.requests.CreateConfigRequest;
-import com.ahirajustice.configserver.modules.config.requests.RefreshConfigsRequest;
-import com.ahirajustice.configserver.modules.config.services.ConfigService;
 import com.ahirajustice.configserver.modules.config.responses.ConfigEntry;
+import com.ahirajustice.configserver.modules.config.services.ConfigService;
 import com.ahirajustice.configserver.modules.config.viewmodels.ConfigViewModel;
+import com.ahirajustice.configserver.modules.microservice.services.CurrentMicroserviceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -45,7 +43,7 @@ public class ConfigServiceImpl implements ConfigService {
 
     private final ConfigRepository configRepository;
     private final ConfigFetchLogRepository configFetchLogRepository;
-    private final CurrentClientService currentClientService;
+    private final CurrentMicroserviceService currentMicroserviceService;
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
 
@@ -55,25 +53,24 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
-    public List<ConfigEntry> fetchConfigs(ConfigEnvironment configEnvironment) {
-        Client currentClient = currentClientService.getCurrentClient();
-        return fetchConfigs(configEnvironment, currentClient);
+    public List<ConfigEntry> fetchConfigs() {
+        Microservice currentMicroservice = currentMicroserviceService.getCurrentMicroservice();
+        return fetchConfigs(currentMicroservice);
     }
 
-    private List<ConfigEntry> fetchConfigs(ConfigEnvironment configEnvironment, Client currentClient) {
-        List<Config> configs = configRepository.findByClientAndConfigEnvironment(currentClient, configEnvironment);
+    private List<ConfigEntry> fetchConfigs(Microservice currentMicroservice) {
+        List<Config> configs = configRepository.findByMicroservice(currentMicroservice);
 
         List<ConfigEntry> response = configs.stream().map(ConfigEntry::from).collect(Collectors.toList());
 
-        logConfigFetch(configEnvironment, currentClient, response);
+        logConfigFetch(currentMicroservice, response);
 
         return response;
     }
 
-    private void logConfigFetch(ConfigEnvironment configEnvironment, Client client, List<ConfigEntry> response) {
+    private void logConfigFetch(Microservice microservice, List<ConfigEntry> response) {
         ConfigFetchLog configFetchLog = ConfigFetchLog.builder()
-                .client(client)
-                .configEnvironment(configEnvironment)
+                .microservice(microservice)
                 .retrievedConfig(ObjectMapperUtils.serialize(objectMapper, response))
                 .build();
 
@@ -83,16 +80,16 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     public void createConfig(CreateConfigRequest request) {
         validate(request.getKey());
-        Client currentClient = currentClientService.getCurrentClient();
+        Microservice currentMicroservice = currentMicroserviceService.getCurrentMicroservice();
 
-        if (configRepository.existsByConfigKeyAndClientAndConfigEnvironment(request.getKey(), currentClient, request.getConfigEnvironment())){
+        if (configRepository.existsByConfigKeyAndMicroservice(request.getKey(), currentMicroservice)){
             String msg = String.format(
-                    "Config with key %s in %s environment already exists for client '%s'", request.getKey(), request.getConfigEnvironment(), currentClient.getIdentifier()
+                    "Config with key %s already exists for microservice '%s'", request.getKey(), currentMicroservice.getIdentifier()
             );
             throw new BadRequestException(msg);
         }
 
-        Config config = buildConfig(request, currentClient);
+        Config config = buildConfig(request, currentMicroservice);
 
         configRepository.save(config);
     }
@@ -110,22 +107,21 @@ public class ConfigServiceImpl implements ConfigService {
             throw new ValidationException(errors);
     }
 
-    private Config buildConfig(CreateConfigRequest request, Client client) {
+    private Config buildConfig(CreateConfigRequest request, Microservice microservice) {
         String configValue = request.getValue();
 
         if (request.encrypt()) {
-            if (StringUtils.isBlank(client.getPublicKey()))
-                throw new BadRequestException("Client public key is not set. Cannot encrypt config.");
+            if (StringUtils.isBlank(microservice.getEncryptingKey()))
+                throw new BadRequestException("Microservice public key is not set. Cannot encrypt config.");
 
-            configValue = AuthUtils.encryptString(configValue, client.getPublicKey());
+            configValue = AuthUtils.encryptString(configValue, microservice.getEncryptingKey());
         }
 
         return Config.builder()
                 .configKey(request.getKey())
                 .configValue(configValue)
-                .configEnvironment(request.getConfigEnvironment())
                 .encrypted(request.encrypt())
-                .client(client)
+                .microservice(microservice)
                 .build();
     }
 
@@ -138,16 +134,16 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
-    public SimpleMessageResponse refreshConfigs(RefreshConfigsRequest request) {
-        Client currentClient = currentClientService.getCurrentClient();
+    public SimpleMessageResponse refreshConfigs() {
+        Microservice currentMicroservice = currentMicroserviceService.getCurrentMicroservice();
 
-        List<ConfigEntry> configEntries = fetchConfigs(request.getEnvironment(), currentClient);
+        List<ConfigEntry> configEntries = fetchConfigs(currentMicroservice);
 
         HttpEntity<?> requestEntity = new HttpEntity<>(configEntries);
 
         try {
             var responseEntity = restTemplate.exchange(
-                    currentClient.getRefreshCallbackUrl(),
+                    String.format("%s/refresh", currentMicroservice.getBaseUrl()),
                     HttpMethod.POST,
                     requestEntity,
                     SimpleMessageResponse.class
@@ -157,14 +153,14 @@ public class ConfigServiceImpl implements ConfigService {
         }
         catch (HttpClientErrorException ex) {
             if (ex instanceof HttpClientErrorException.NotFound)
-                throw new BadRequestException("Client's refreshCallbackUrl improperly configured");
+                throw new BadRequestException("Microservice's refreshCallbackUrl improperly configured");
             else if (ex instanceof HttpClientErrorException.BadRequest || ex instanceof HttpClientErrorException.UnprocessableEntity)
-                throw new ConfigurationException(String.format("Bad refresh implementation on client '%s'", currentClient.getIdentifier()));
+                throw new ConfigurationException(String.format("Bad refresh implementation on microservice '%s'", currentMicroservice.getIdentifier()));
             else
                 throw new ConfigurationException(ex.getMessage());
         }
         catch (ResourceAccessException ex) {
-            throw new FailedDependencyException("Cannot reach client application. Please try again later");
+            throw new FailedDependencyException("Cannot reach microservice application. Please try again later");
         }
     }
 
