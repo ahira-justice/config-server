@@ -43,8 +43,31 @@ public class CommonUtils {
         return result;
     }
 
-    public static String generateRandomString(int length) {
-        return generateRandomString(length, "0123456789");
+    public static String generateRandomDigits(String prefix, int length) {
+        return String.format("%s_%s", prefix, generateRandomDigits(length));
+    }
+
+    public static String generateRandomDigits(int length) {
+        String alphabet = "0123456789";
+        return generateRandomString(length, alphabet);
+    }
+
+    public static String generateRandomAlphaNumeric(String prefix, int length) {
+        return String.format("%s_%s", prefix, generateRandomAlphaNumeric(length));
+    }
+
+    public static String generateRandomAlphaNumeric(int length) {
+        String alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        return generateRandomString(length, alphabet);
+    }
+
+    public static String generateRandomHex(String prefix, int length) {
+        return String.format("%s_%s", prefix, generateRandomHex(length));
+    }
+
+    public static String generateRandomHex(int length) {
+        String alphabet = "0123456789abcdef";
+        return generateRandomString(length, alphabet);
     }
 
     public static String generateRandomString(int length, String alphabet) {
