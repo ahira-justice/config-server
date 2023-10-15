@@ -21,7 +21,8 @@ public class CreateConfigRequest {
     @NotBlank(message = "value is required")
     private String value;
     @Getter(AccessLevel.NONE)
-    private boolean encrypt;
+    @Builder.Default
+    private boolean encrypt = true;
 
     public boolean encrypt(){
         return this.encrypt;

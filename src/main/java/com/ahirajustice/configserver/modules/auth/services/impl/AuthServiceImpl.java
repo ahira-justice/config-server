@@ -1,12 +1,10 @@
 package com.ahirajustice.configserver.modules.auth.services.impl;
 
 import com.ahirajustice.configserver.common.constants.SecurityConstants;
-import com.ahirajustice.configserver.common.entities.Microservice;
 import com.ahirajustice.configserver.common.entities.User;
 import com.ahirajustice.configserver.common.enums.TimeFactor;
 import com.ahirajustice.configserver.common.exceptions.UnauthorizedException;
 import com.ahirajustice.configserver.common.properties.AppProperties;
-import com.ahirajustice.configserver.common.repositories.MicroserviceRepository;
 import com.ahirajustice.configserver.common.repositories.UserRepository;
 import com.ahirajustice.configserver.common.utils.AuthUtils;
 import com.ahirajustice.configserver.common.utils.CommonUtils;

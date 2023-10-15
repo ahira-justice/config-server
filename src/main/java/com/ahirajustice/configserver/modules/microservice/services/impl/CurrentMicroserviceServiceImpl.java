@@ -5,7 +5,7 @@ import com.ahirajustice.configserver.common.entities.Microservice;
 import com.ahirajustice.configserver.common.exceptions.SystemErrorException;
 import com.ahirajustice.configserver.common.exceptions.ValidationException;
 import com.ahirajustice.configserver.common.repositories.MicroserviceRepository;
-import com.ahirajustice.configserver.modules.auth.services.AuthDecodeService;
+import com.ahirajustice.configserver.common.utils.AuthUtils;
 import com.ahirajustice.configserver.modules.microservice.services.CurrentMicroserviceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,24 +22,24 @@ public class CurrentMicroserviceServiceImpl implements CurrentMicroserviceServic
 
     private final HttpServletRequest request;
     private final MicroserviceRepository microserviceRepository;
-    private final AuthDecodeService authDecodeService;
 
     @Override
     public Microservice getCurrentMicroservice() {
         try {
             String header = request.getHeader(SecurityConstants.HEADER_STRING);
 
-            Optional<String> microserviceIdExists = getMicroserviceIdFromToken(header);
-            if (!microserviceIdExists.isPresent())
-                throw new ValidationException("Invalid microservice access token");
+            String microserviceSecretKey = getMicroserviceSecretKeyFromToken(header).orElse(null);
+            if (microserviceSecretKey == null)
+                throw new ValidationException("Invalid microservice secret key");
 
-            String microserviceId = microserviceIdExists.get();
-            Optional<Microservice> microserviceExists = microserviceRepository.findByIdentifier(microserviceId);
+            Microservice microservice = microserviceRepository.findByHashedSecretKey(
+                    AuthUtils.getSha256Hash(microserviceSecretKey)
+            ).orElse(null);
 
-            if (!microserviceExists.isPresent())
-                throw new ValidationException(String.format("Microservice with microserviceId: '%s' specified in access token does not exist", microserviceId));
+            if (microservice == null)
+                throw new ValidationException("Invalid microservice secret key");
 
-            return microserviceExists.get();
+            return microservice;
         }
         catch(ValidationException ex) {
             throw ex;
@@ -50,15 +50,13 @@ public class CurrentMicroserviceServiceImpl implements CurrentMicroserviceServic
         }
     }
 
-    private Optional<String> getMicroserviceIdFromToken(String header) {
-        if (StringUtils.isBlank(header)) {
+    private Optional<String> getMicroserviceSecretKeyFromToken(String header) {
+        if (StringUtils.isBlank(header))
             return Optional.empty();
-        }
 
         String token = header.split(" ")[1];
-        String microserviceId = authDecodeService.decodeJwt(token).getMicroserviceId();
 
-        return Optional.ofNullable(microserviceId);
+        return Optional.ofNullable(token);
     }
 
 }

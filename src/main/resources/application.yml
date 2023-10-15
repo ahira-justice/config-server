@@ -25,3 +25,5 @@ app:
     private-key: ${env.PRIVATE_KEY}
     superuser:
       password: ${env.SUPERUSER_PASSWORD}
+    secret-key:
+      length: ${env.SECRET_KEY_LENGTH}

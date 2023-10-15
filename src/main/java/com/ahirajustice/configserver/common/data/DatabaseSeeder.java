@@ -23,7 +23,7 @@ public class DatabaseSeeder implements ApplicationRunner {
 
     private void seedSuperuserUser() {
         try {
-            Optional<User> superuserExists = userRepository.findByUsername(SuperuserConstants.SUPERUSER_EMAIL);
+            Optional<User> superuserExists = userRepository.findByUsername(SuperuserConstants.SUPERUSER_USERNAME);
 
             if (superuserExists.isPresent()) {
                 return;

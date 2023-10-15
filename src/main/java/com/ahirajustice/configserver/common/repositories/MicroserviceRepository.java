@@ -10,8 +10,9 @@ import java.util.Optional;
 @Repository
 public interface MicroserviceRepository extends JpaRepository<Microservice, Long>, QuerydslPredicateExecutor<Microservice> {
 
-    boolean existsByIdentifier(String identifier);
-
     Optional<Microservice> findByIdentifier(String identifier);
+    boolean existsByIdentifier(String identifier);
+    boolean existsByHashedSecretKey(String hashedSecretKey);
+    Optional<Microservice>  findByHashedSecretKey(String hashedSecretKey);
 
 }

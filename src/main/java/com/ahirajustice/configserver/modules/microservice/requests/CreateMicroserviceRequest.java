@@ -17,8 +17,6 @@ public class CreateMicroserviceRequest {
 
     @NotBlank(message = "identifier is required")
     private String identifier;
-    @NotBlank(message = "secretKey is required")
-    private String secretKey;
     @NotBlank(message = "baseUrl is required")
     private String baseUrl;
     @NotBlank(message = "encryptingKey is required")

@@ -4,6 +4,7 @@ import com.ahirajustice.configserver.modules.microservice.queries.SearchMicroser
 import com.ahirajustice.configserver.modules.microservice.requests.CreateMicroserviceRequest;
 import com.ahirajustice.configserver.modules.microservice.requests.UpdateMicroserviceRequest;
 import com.ahirajustice.configserver.modules.microservice.services.MicroserviceService;
+import com.ahirajustice.configserver.modules.microservice.viewmodels.MicroserviceDetail;
 import com.ahirajustice.configserver.modules.microservice.viewmodels.MicroserviceViewModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,20 +33,26 @@ public class MicroserviceController {
 
     @RequestMapping(path = "/{id}", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
-    public MicroserviceViewModel getMicroservice(@PathVariable long id) {
+    public MicroserviceDetail getMicroservice(@PathVariable long id) {
         return microserviceService.getMicroservice(id);
     }
 
     @RequestMapping(path = "", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.CREATED)
-    public MicroserviceViewModel createMicroservice(@Valid @RequestBody CreateMicroserviceRequest request) {
+    public MicroserviceDetail createMicroservice(@Valid @RequestBody CreateMicroserviceRequest request) {
         return microserviceService.createMicroservice(request);
     }
 
     @RequestMapping(path = "/{id}", method = RequestMethod.PUT)
     @ResponseStatus(HttpStatus.OK)
-    public MicroserviceViewModel updateMicroservice(@PathVariable long id, @Valid @RequestBody UpdateMicroserviceRequest request) {
+    public MicroserviceDetail updateMicroservice(@PathVariable long id, @Valid @RequestBody UpdateMicroserviceRequest request) {
         return microserviceService.updateMicroservice(request, id);
+    }
+
+    @RequestMapping(path = "/{id}/change-secret-key", method = RequestMethod.PUT)
+    @ResponseStatus(HttpStatus.OK)
+    public MicroserviceDetail changeMicroserviceSecretKey(@PathVariable long id) {
+        return microserviceService.changeMicroserviceSecretKey(id);
     }
 
 }

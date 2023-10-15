@@ -10,6 +10,7 @@ import com.ahirajustice.configserver.common.exceptions.FailedDependencyException
 import com.ahirajustice.configserver.common.exceptions.ValidationException;
 import com.ahirajustice.configserver.common.repositories.ConfigFetchLogRepository;
 import com.ahirajustice.configserver.common.repositories.ConfigRepository;
+import com.ahirajustice.configserver.common.repositories.MicroserviceRepository;
 import com.ahirajustice.configserver.common.responses.SimpleMessageResponse;
 import com.ahirajustice.configserver.common.utils.AuthUtils;
 import com.ahirajustice.configserver.common.utils.CommonUtils;
@@ -21,6 +22,7 @@ import com.ahirajustice.configserver.modules.config.responses.ConfigEntry;
 import com.ahirajustice.configserver.modules.config.services.ConfigService;
 import com.ahirajustice.configserver.modules.config.viewmodels.ConfigViewModel;
 import com.ahirajustice.configserver.modules.microservice.services.CurrentMicroserviceService;
+import com.ahirajustice.configserver.modules.microservice.services.MicroserviceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -44,6 +46,7 @@ public class ConfigServiceImpl implements ConfigService {
     private final ConfigRepository configRepository;
     private final ConfigFetchLogRepository configFetchLogRepository;
     private final CurrentMicroserviceService currentMicroserviceService;
+    private final MicroserviceService microserviceService;
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
 
@@ -134,8 +137,8 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
-    public SimpleMessageResponse refreshConfigs() {
-        Microservice currentMicroservice = currentMicroserviceService.getCurrentMicroservice();
+    public SimpleMessageResponse refreshConfigs(String serviceIdentifier) {
+        Microservice currentMicroservice = microserviceService.validateMicroservice(serviceIdentifier);
 
         List<ConfigEntry> configEntries = fetchConfigs(currentMicroservice);
 
@@ -153,7 +156,7 @@ public class ConfigServiceImpl implements ConfigService {
         }
         catch (HttpClientErrorException ex) {
             if (ex instanceof HttpClientErrorException.NotFound)
-                throw new BadRequestException("Microservice's refreshCallbackUrl improperly configured");
+                throw new BadRequestException("Microservice's baseUrl improperly configured");
             else if (ex instanceof HttpClientErrorException.BadRequest || ex instanceof HttpClientErrorException.UnprocessableEntity)
                 throw new ConfigurationException(String.format("Bad refresh implementation on microservice '%s'", currentMicroservice.getIdentifier()));
             else

@@ -2,6 +2,7 @@ package com.ahirajustice.configserver.common.utils;
 
 import com.ahirajustice.configserver.common.exceptions.ConfigurationException;
 import com.ahirajustice.configserver.common.exceptions.ValidationException;
+import com.google.common.hash.Hashing;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -74,9 +75,39 @@ public class AuthUtils {
             throw new ConfigurationException(ex.getMessage());
         }
         catch (ConfigurationException | InvalidKeyException ex) {
-            throw new ValidationException("Microservice public key is invalid. Update microservice public key");
+            throw new ValidationException("Configured public key is invalid. Update configured public key");
         }
 
         return encryptedMessage;
     }
+
+    public static String decryptString(String value, String privateKeyString) {
+        String decryptedMessage;
+
+        try {
+            PrivateKey privateKey = getPrivateKey(privateKeyString);
+
+            Cipher decryptCipher = Cipher.getInstance("RSA");
+            decryptCipher.init(Cipher.DECRYPT_MODE, privateKey);
+
+            byte[] secretMessageBytes = Base64.getDecoder().decode(value);
+            byte[] decryptedMessageBytes = decryptCipher.doFinal(secretMessageBytes);
+            decryptedMessage = new String(decryptedMessageBytes, StandardCharsets.UTF_8);
+        }
+        catch (IllegalBlockSizeException | BadPaddingException | NoSuchPaddingException | NoSuchAlgorithmException ex) {
+            throw new ConfigurationException(ex.getMessage());
+        }
+        catch (ConfigurationException | InvalidKeyException ex) {
+            throw new ValidationException("Configured private key is invalid. Update configured private key");
+        }
+
+        return decryptedMessage;
+    }
+
+    public static String getSha256Hash(String plaintext) {
+        return Hashing.sha256()
+                .hashString(plaintext, StandardCharsets.UTF_8)
+                .toString();
+    }
+
 }

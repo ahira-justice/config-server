@@ -10,6 +10,7 @@ import com.ahirajustice.configserver.modules.config.viewmodels.ConfigViewModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -50,10 +51,10 @@ public class ConfigController {
         configService.batchCreateConfigs(request);
     }
 
-    @RequestMapping(path = "/refresh", method = RequestMethod.POST)
+    @RequestMapping(path = "/refresh/{serviceIdentifier}", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public SimpleMessageResponse refreshConfigs() {
-        return configService.refreshConfigs();
+    public SimpleMessageResponse refreshConfigs(@PathVariable String serviceIdentifier) {
+        return configService.refreshConfigs(serviceIdentifier);
     }
 
 }

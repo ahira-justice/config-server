@@ -22,8 +22,12 @@ public class Microservice extends BaseEntity {
 
     @Column(nullable = false, unique = true)
     private String identifier;
-    @Column(nullable = false, unique = true)
-    private String secretKey;
+    @Lob
+    @Column(nullable = false)
+    private String encryptedSecretKey;
+    @Lob
+    @Column(nullable = false)
+    private String hashedSecretKey;
     @Lob
     @Column(nullable = false)
     private String encryptingKey;

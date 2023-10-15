@@ -16,5 +16,7 @@ public class AppProperties {
     private String privateKey;
     @Value("${app.config.superuser.password}")
     private String superuserPassword;
+    @Value("${app.config.secret-key.length}")
+    private int secretKeyLength;
 
 }

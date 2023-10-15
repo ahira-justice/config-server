@@ -20,6 +20,6 @@ public interface ConfigService {
 
     void batchCreateConfigs(BatchCreateConfigsRequest batchRequest);
 
-    SimpleMessageResponse refreshConfigs();
+    SimpleMessageResponse refreshConfigs(String serviceIdentifier);
 
 }
