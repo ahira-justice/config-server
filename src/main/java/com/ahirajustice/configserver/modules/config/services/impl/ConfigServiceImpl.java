@@ -10,8 +10,6 @@ import com.ahirajustice.configserver.common.exceptions.FailedDependencyException
 import com.ahirajustice.configserver.common.exceptions.ValidationException;
 import com.ahirajustice.configserver.common.repositories.ConfigFetchLogRepository;
 import com.ahirajustice.configserver.common.repositories.ConfigRepository;
-import com.ahirajustice.configserver.common.repositories.MicroserviceRepository;
-import com.ahirajustice.configserver.common.responses.SimpleMessageResponse;
 import com.ahirajustice.configserver.common.utils.AuthUtils;
 import com.ahirajustice.configserver.common.utils.CommonUtils;
 import com.ahirajustice.configserver.common.utils.ObjectMapperUtils;
@@ -21,6 +19,7 @@ import com.ahirajustice.configserver.modules.config.requests.CreateConfigRequest
 import com.ahirajustice.configserver.modules.config.responses.ConfigEntry;
 import com.ahirajustice.configserver.modules.config.services.ConfigService;
 import com.ahirajustice.configserver.modules.config.viewmodels.ConfigViewModel;
+import com.ahirajustice.configserver.modules.microservice.models.RestartConfig;
 import com.ahirajustice.configserver.modules.microservice.services.CurrentMicroserviceService;
 import com.ahirajustice.configserver.modules.microservice.services.MicroserviceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,9 +27,9 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
@@ -131,32 +130,28 @@ public class ConfigServiceImpl implements ConfigService {
     @Transactional
     @Override
     public void batchCreateConfigs(BatchCreateConfigsRequest batchRequest) {
-        for (var request: batchRequest.getRequests()) {
+        for (var request: batchRequest.getRequests())
             createConfig(request);
-        }
     }
 
     @Override
-    public SimpleMessageResponse refreshConfigs(String serviceIdentifier) {
+    public void refreshConfigs(String serviceIdentifier) {
         Microservice currentMicroservice = microserviceService.validateMicroservice(serviceIdentifier);
+        RestartConfig restartConfig = currentMicroservice.getRestartConfig();
 
-        List<ConfigEntry> configEntries = fetchConfigs(currentMicroservice);
-
-        HttpEntity<?> requestEntity = new HttpEntity<>(configEntries);
-
+        HttpEntity<?> requestEntity = new HttpEntity<>(CollectionUtils.toMultiValueMap(restartConfig.getHeaders()));
         try {
-            var responseEntity = restTemplate.exchange(
-                    String.format("%s/refresh", currentMicroservice.getBaseUrl()),
-                    HttpMethod.POST,
+            restTemplate.exchange(
+                    restartConfig.getUrl(),
+                    restartConfig.getMethod(),
                     requestEntity,
-                    SimpleMessageResponse.class
+                    Void.class,
+                    restartConfig.getParams()
             );
-
-            return responseEntity.getBody();
         }
         catch (HttpClientErrorException ex) {
             if (ex instanceof HttpClientErrorException.NotFound)
-                throw new BadRequestException("Microservice's baseUrl improperly configured");
+                throw new BadRequestException("Restart config url improperly configured");
             else if (ex instanceof HttpClientErrorException.BadRequest || ex instanceof HttpClientErrorException.UnprocessableEntity)
                 throw new ConfigurationException(String.format("Bad refresh implementation on microservice '%s'", currentMicroservice.getIdentifier()));
             else

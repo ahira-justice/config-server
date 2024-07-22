@@ -39,16 +39,14 @@ public class MicroserviceServiceImpl implements MicroserviceService {
 
     @Override
     public MicroserviceDetail createMicroservice(CreateMicroserviceRequest request) {
-        if (microserviceRepository.existsByIdentifier(request.getIdentifier())) {
-            throw new BadRequestException(String.format("Microservice with identifier: '%s' already exists", request.getIdentifier()));
-        }
-
+        validateCreateMicroserviceRequest(request);
         Microservice microservice = buildMicroservice(request);
-        Microservice createdMicroservice = microserviceRepository.save(microservice);
+        return persistMicroservice(microservice);
+    }
 
-        var decryptedSecretKey = AuthUtils.decryptString(microservice.getEncryptedSecretKey(), appProperties.getPrivateKey());
-
-        return MicroserviceDetail.from(createdMicroservice, decryptedSecretKey);
+    private void validateCreateMicroserviceRequest(CreateMicroserviceRequest request) {
+        if (microserviceRepository.existsByIdentifier(request.getIdentifier()))
+            throw new BadRequestException(String.format("Microservice with identifier: '%s' already exists", request.getIdentifier()));
     }
 
     private Microservice buildMicroservice(CreateMicroserviceRequest request) {
@@ -56,14 +54,17 @@ public class MicroserviceServiceImpl implements MicroserviceService {
         String hashedSecretKey = splitSecretKey[0];
         String encryptedSecretKey = splitSecretKey[1];
 
-        return Microservice.builder()
+        Microservice microservice = Microservice.builder()
                 .identifier(request.getIdentifier())
                 .hashedSecretKey(hashedSecretKey)
                 .encryptedSecretKey(encryptedSecretKey)
-                .baseUrl(request.getBaseUrl())
                 .encryptingKey(request.getEncryptingKey())
                 .isActive(true)
                 .build();
+
+        microservice.setRestartConfig(request.getRestartConfig());
+
+        return microservice;
     }
 
     private String generateSecretKey() {
@@ -74,9 +75,10 @@ public class MicroserviceServiceImpl implements MicroserviceService {
             secretKey = CommonUtils.generateRandomHex(
                     KeyConstants.SECRET_KEY_PREFIX, appProperties.getSecretKeyLength()
             );
-            encryptedSecretKey = AuthUtils.encryptString(secretKey, appProperties.getPublicKey());
         }
         while (secretKeyExists(AuthUtils.getSha256Hash(secretKey)));
+
+        encryptedSecretKey = AuthUtils.encryptString(secretKey, appProperties.getPublicKey());
 
         return AuthUtils.getSha256Hash(secretKey) + "|" + encryptedSecretKey;
     }
@@ -88,8 +90,8 @@ public class MicroserviceServiceImpl implements MicroserviceService {
     @Override
     public MicroserviceDetail updateMicroservice(UpdateMicroserviceRequest request, long id) {
         Microservice microservice = validateMicroservice(id);
-        microservice.setBaseUrl(request.getBaseUrl());
-        return persistMicroserviceUpdate(microservice);
+        microservice.setRestartConfig(request.getRestartConfig());
+        return persistMicroservice(microservice);
     }
 
     @Override
@@ -103,13 +105,7 @@ public class MicroserviceServiceImpl implements MicroserviceService {
         microservice.setHashedSecretKey(hashedSecretKey);
         microservice.setEncryptedSecretKey(encryptedSecretKey);
 
-        return persistMicroserviceUpdate(microservice);
-    }
-
-    private MicroserviceDetail persistMicroserviceUpdate(Microservice microservice) {
-        Microservice updatedMicroservice = microserviceRepository.save(microservice);
-        var decryptedSecretKey = AuthUtils.decryptString(microservice.getEncryptedSecretKey(), appProperties.getPrivateKey());
-        return MicroserviceDetail.from(updatedMicroservice, decryptedSecretKey);
+        return persistMicroservice(microservice);
     }
 
     private Microservice validateMicroservice(long id) {
@@ -119,6 +115,12 @@ public class MicroserviceServiceImpl implements MicroserviceService {
             throw new NotFoundException(String.format("Microservice with id: '%d' does not exist", id));
 
         return microservice;
+    }
+
+    private MicroserviceDetail persistMicroservice(Microservice microservice) {
+        Microservice updatedMicroservice = microserviceRepository.save(microservice);
+        var decryptedSecretKey = AuthUtils.decryptString(microservice.getEncryptedSecretKey(), appProperties.getPrivateKey());
+        return MicroserviceDetail.from(updatedMicroservice, decryptedSecretKey);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package com.ahirajustice.configserver.modules.config.controllers;
 
-import com.ahirajustice.configserver.common.responses.SimpleMessageResponse;
 import com.ahirajustice.configserver.modules.config.queries.SearchConfigsQuery;
 import com.ahirajustice.configserver.modules.config.requests.BatchCreateConfigsRequest;
 import com.ahirajustice.configserver.modules.config.requests.CreateConfigRequest;
@@ -51,10 +50,10 @@ public class ConfigController {
         configService.batchCreateConfigs(request);
     }
 
-    @RequestMapping(path = "/refresh/{serviceIdentifier}", method = RequestMethod.POST)
+    @RequestMapping(path = "/refresh/{identifier}", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public SimpleMessageResponse refreshConfigs(@PathVariable String serviceIdentifier) {
-        return configService.refreshConfigs(serviceIdentifier);
+    public void refreshConfigs(@PathVariable String identifier) {
+        configService.refreshConfigs(identifier);
     }
 
 }

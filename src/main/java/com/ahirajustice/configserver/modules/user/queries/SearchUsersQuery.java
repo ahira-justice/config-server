@@ -22,7 +22,6 @@ public class SearchUsersQuery extends BaseQuery {
 
     private String username;
     private String email;
-    private Boolean isEmailVerified;
     private String firstName;
     private String lastName;
 

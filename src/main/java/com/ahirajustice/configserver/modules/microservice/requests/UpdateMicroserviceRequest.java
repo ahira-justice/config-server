@@ -1,12 +1,13 @@
 package com.ahirajustice.configserver.modules.microservice.requests;
 
+import com.ahirajustice.configserver.modules.microservice.models.RestartConfig;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Getter
 @Setter
@@ -15,7 +16,7 @@ import javax.validation.constraints.NotBlank;
 @AllArgsConstructor
 public class UpdateMicroserviceRequest {
 
-    @NotBlank(message = "baseUrl is required")
-    private String baseUrl;
+    @NotNull(message = "restartConfig is required")
+    private RestartConfig restartConfig;
 
 }
